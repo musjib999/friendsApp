@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:testApp/view/age_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -7,33 +8,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  @override
-  void initState() {
-    super.initState();
-    missionsStream();
-  }
-
   final _firestore = Firestore.instance;
 
-  // void getCourseTitle() async {
-  //   final names = await _firestore.collection('missions').getDocuments();
-  //   for (var name in names.documents) {
-  //     print(name.data);
-  //   }
-  // }
-
-  void missionsStream() async {
-    await for (var snapshot in _firestore.collection('missions').snapshots()) {
-      for (var name in snapshot.documents) {
-        print(name.data['name']);
-      }
-    }
-  }
-
-  // void getMissions() async{
-  //   final missions = await  _firestore.collection('missions').document();
-  //   print(missions);
-  // }
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -46,15 +23,31 @@ class _HomeScreenState extends State<HomeScreen> {
           StreamBuilder(
             stream: _firestore.collection('missions').snapshots(),
             builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
               final names = snapshot.data.documents;
               List<ListTile> namesWidgets = [];
               for (var name in names) {
                 final missionName = name.data['name'];
-                final age = name.data['age'];
+                final id = name.documentID;
                 final nameWidget = ListTile(
                   title: Text('$missionName'),
-                    subtitle: Text('$age'),
-                  );
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return AgePage(
+                            documentId: id,
+                          );
+                        },
+                      ),
+                    );
+                  },
+                );
                 namesWidgets.add(nameWidget);
               }
               return Column(
